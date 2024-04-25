@@ -1,0 +1,52 @@
+﻿@using Hierarchy_Project_WSS_CONSULTING.Models
+@using Microsoft.EntityFrameworkCore
+@model List<DivisionViewModel>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Division Hierarchy</title>
+    <style>
+        ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Division Hierarchy</h2>
+
+    <ul>
+        @foreach (var division in Model.Where(d => d.PathFromPatriarch == HierarchyId.Parse("/")))
+        {
+            <li>
+                @division.Name
+                @Html.Raw(RenderChildDivisions(Model, division.PathFromPatriarch))
+            </li>
+        }
+    </ul>
+
+    
+    @functions {
+        string RenderChildDivisions(List<DivisionViewModel> divisions, HierarchyId pathFromPatriarch)
+        {
+            var result = "";
+            var childDivisions = divisions.Where(d => d.PathFromPatriarch.IsDescendantOf(pathFromPatriarch) && d.PathFromPatriarch.GetAncestor(1) == pathFromPatriarch);
+            if (childDivisions.Any())
+            {
+                result += "<ul>";
+                foreach (var child in childDivisions)
+                {
+                    result += "<li>" + child.PathFromPatriarch.ToString().Trim('/').Split('/').Last()+ " | " + child.Name;
+                    result += RenderChildDivisions(divisions, child.PathFromPatriarch);
+                    result += "</li>";
+                }
+                result += "</ul>";
+            }
+            return result;
+        }
+    }
+</body>
+</html>
